@@ -83,6 +83,7 @@ class ManualLight extends Component {
       return (<Light key={i} name={v.name} state={v.state} />);
     });
     return (<View>
+      {lights}
     </View>);
   }
 }
