@@ -8,6 +8,7 @@ import React, {
   Component,
   StyleSheet,
   Text,
+  TextInput,
   View,
   ScrollView,
   Navigator,
@@ -22,7 +23,7 @@ import Button from 'react-native-button';
 import watch from 'redux-watch';
 import store from './app/createStore';
 import { addBeacon } from './app/actions/beacons';
-import { addLight, fetchLights } from './app/actions/light';
+import { addLight, fetchLights, toggleLight } from './app/actions/light';
 import { addHeater, fetchHeaters } from './app/actions/heater';
 import { addDoor, fetchDoors } from './app/actions/door';
 import { setField } from './app/actions/addForm';
@@ -69,9 +70,9 @@ class Schedules extends Component {
 }
 
 function Light(props) {
-  return (<View>
+  return (<View style={{flexDirection: "row"}}>
     <IonIcon name={props.state ? "ios-lightbulb" : "ios-lightbulb-outline"} size={70} />
-    <Text>{props.name}</Text>
+    <Text style={{alignSelf: "center", marginLeft: 60}}>GPIO {props.gpioPin}</Text>
   </View>);
 }
 
@@ -89,8 +90,12 @@ class ManualLight extends Component {
       </TouchableOpacity>);
   }
   render() {
-    var lights = this.props.lights.map(function(v, i) {
-      return (<Light key={i} name={v.name} state={v.state} />);
+    var lights = this.props.lights.valueSeq().map((v) => {
+      return (<TouchableOpacity
+                key={v.get("id")}
+                onPress={() => this.props.dispatch(toggleLight(v.get("id"), !v.get("state")))}>
+        <Light gpioPin={v.get("gpio_pin")} state={v.get("state")} />
+      </TouchableOpacity>);
     });
     return (<ScrollView>
       {lights}
@@ -99,10 +104,10 @@ class ManualLight extends Component {
 }
 ManualLight = connect(state => ({ "lights": state.get("lights", List()) }))(ManualLight);
 
-class AddLight {
-  static renderRightBtn() {
+class AddLight extends Component {
+  static renderRightBtn(_, navigator) {
     return (<TouchableOpacity
-        onPress={() => store.dispatch(addLight(store.getState().get("addForm").get("gpio_pin")))}
+        onPress={() => store.dispatch(addLight(store.getState().get("addForm").get("gpio_pin"))) && navigator.pop()}
         style={styles.navBarRightButton}>
         <Text style={[styles.navBarText, styles.navBarButtonText]}>
           Done
@@ -112,7 +117,7 @@ class AddLight {
   render() {
     return (<View>
         <TextInput
-          onChangeText={(text) => setField("gpio_pin", text)}
+          onChangeText={(text) => this.props.dispatch(setField("gpio_pin", text))}
           value={this.props.addForm.get("gpio_pin")}
         />
       </View>);

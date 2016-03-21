@@ -1,9 +1,10 @@
 from flask import Flask, request, Response
 import flask
-from flask_sqlalchemy import SQLAlchemy, and_
+from flask_sqlalchemy import SQLAlchemy
 from models.common import db, Light, Heater, Door, AlchemyEncoder
 import logging
 import sys
+import subprocess
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://domotic@localhost/domotic'
@@ -18,7 +19,7 @@ def all_light():
 
 @app.route("/light", methods=['POST'])
 def new_light():
-    light = Light(state = False, gpio_pin = request.get_json()["gpio_pin"])
+    light = Light(state = False, gpio_pin = request.form["gpio_pin"])
     db.session.add(light)
     db.session.commit()
     return flask.json.dumps(light, cls=AlchemyEncoder)
@@ -29,7 +30,15 @@ def light(id):
 
 @app.route("/light/<id>", methods=['POST'])
 def light_update(id):
-    Light.query.filter(Light.id == id).update(request.get_json())
+    Light.query.filter(Light.id == id).update(request.form)
+    db.session.commit()
+    light = Light.query.filter(Light.id == id).one()
+    try:
+        if light.state:
+            subprocess.call(["gpio", "write", str(light.gpio_pin), "1"])
+    except:
+        pass
+    return flask.json.dumps(light, cls=AlchemyEncoder)
 
 @app.route("/light/<id>/on", methods=['POST'])
 def light_on(id):
@@ -42,6 +51,7 @@ def light_off(id):
     Light.query.filter(Light.id == id).update({ "state": True })
     light = Light.query.filter(Light.id == id).one()
     subprocess.call(["gpio", "write", str(light.gpio_pin), "0"])
+    return flask.json.dumps(light, cls=AlchemyEncoder)
 
 @app.route("/heater", methods=['GET'])
 def all_heater():
@@ -60,7 +70,7 @@ def heater(id):
 
 @app.route("/header/<id>", methods=['POST'])
 def heater_post(id):
-    Heater.query.filter(Heater.id == id).update(request.get_json(), cls=AlchemyEncoder)
+    Heater.query.filter(Heater.id == id).update(request.form, cls=AlchemyEncoder)
 
 @app.route("/door", methods=['GET'])
 def all_door():
@@ -79,7 +89,7 @@ def door(id):
 
 @app.route("/door/<id>", methods=['POST'])
 def door_post(id):
-    Door.query.filter(Door.id == id).update(request.get_json(), cls=AlchemyEncoder)
+    Door.query.filter(Door.id == id).update(request.form, cls=AlchemyEncoder)
 
 
 @app.route("/nearestBeacon", methods=['POST'])

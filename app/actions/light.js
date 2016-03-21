@@ -21,3 +21,16 @@ export const fetchLights = async function fetchLights() {
     payload: await response.json()
   };
 }
+
+export const toggleLight = async function toggleLight(light, state) {
+  const form = new FormData();
+  form.append('state', state ? 1 : 0);
+  const response = await fetch(`${api_url}/light/${light}`, {
+    method: "post",
+    body: form
+  });
+  return {
+    type: types.UPDATE_LIGHT,
+    payload: await response.json()
+  };
+}

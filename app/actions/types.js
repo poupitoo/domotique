@@ -1,6 +1,7 @@
 export const INIT = 'INIT';
 export const ADD_LIGHT = 'ADD_LIGHT';
 export const FETCH_LIGHTS = 'FETCH_LIGHTS';
+export const UPDATE_LIGHT = 'UPDATE_LIGHT';
 export const ADD_HEATER = 'ADD_HEATER';
 export const FETCH_HEATERS = 'FETCH_HEATERS';
 export const ADD_DOOR = 'ADD_DOOR';
