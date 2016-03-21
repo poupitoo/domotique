@@ -9,17 +9,27 @@ import React, {
   StyleSheet,
   Text,
   View,
+  ScrollView,
   Navigator,
   BackAndroid,
   TouchableOpacity
 } from 'react-native';
 import { connect, Provider } from 'react-redux';
-import { List } from 'immutable';
+import { Map, List } from 'immutable';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import Button from 'react-native-button';
+import watch from 'redux-watch';
 import store from './app/createStore';
+import { addBeacon } from './app/actions/beacons';
 import { addLight, fetchLights } from './app/actions/light';
+import { addHeater, fetchHeaters } from './app/actions/heater';
+import { addDoor, fetchDoors } from './app/actions/door';
+import { setField } from './app/actions/addForm';
+import { api_url } from './app/constants/config';
+import nearestBeacon from './app/selectors/nearestBeacon';
+import cordova from 'react-native-cordova-plugin';
+import DeviceInfo from 'react-native-device-info';
 
 /*
  * This application is written using the React/Redux combo.
@@ -69,9 +79,9 @@ class ManualLight extends Component {
   componentDidMount() {
     this.props.dispatch(fetchLights());
   }
-  static renderRightBtn() {
+  static renderRightBtn(_, navigator) {
     return (<TouchableOpacity
-        onPress={() => store.dispatch(addLight())}
+        onPress={() => navigator.push({ title: 'Add Light', component: AddLight }) }
         style={styles.navBarRightButton}>
         <Text style={[styles.navBarText, styles.navBarButtonText]}>
           Add
@@ -82,12 +92,96 @@ class ManualLight extends Component {
     var lights = this.props.lights.map(function(v, i) {
       return (<Light key={i} name={v.name} state={v.state} />);
     });
-    return (<View>
+    return (<ScrollView>
       {lights}
-    </View>);
+    </ScrollView>);
   }
 }
 ManualLight = connect(state => ({ "lights": state.get("lights", List()) }))(ManualLight);
+
+class AddLight {
+  static renderRightBtn() {
+    return (<TouchableOpacity
+        onPress={() => store.dispatch(addLight(store.getState().get("addForm").get("gpio_pin")))}
+        style={styles.navBarRightButton}>
+        <Text style={[styles.navBarText, styles.navBarButtonText]}>
+          Done
+        </Text>
+      </TouchableOpacity>);
+  }
+  render() {
+    return (<View>
+        <TextInput
+          onChangeText={(text) => setField("gpio_pin", text)}
+          value={this.props.addForm.get("gpio_pin")}
+        />
+      </View>);
+  }
+}
+AddLight = connect(state => ({ "addForm": state.get("addForm", Map()) }))(AddLight);
+
+
+function Door(props) {
+  return (<View>
+    <Icon name={props.state ? "lock" : "unlock"} size={70} />
+    <Text>{props.name}</Text>
+  </View>);
+}
+
+class ManualDoor extends Component {
+  componentDidMount() {
+    this.props.dispatch(fetchDoors());
+  }
+  static renderRightBtn() {
+    return (<TouchableOpacity
+        onPress={() => store.dispatch(addDoor())}
+        style={styles.navBarRightButton}>
+        <Text style={[styles.navBarText, styles.navBarButtonText]}>
+          Add
+        </Text>
+      </TouchableOpacity>);
+  }
+  render() {
+    var doors = this.props.doors.map(function(v, i) {
+      return (<Door key={i} name={v.name} state={v.state} />);
+    });
+    return (<View>
+      {doors}
+    </View>);
+  }
+}
+ManualDoor = connect(state => ({ "doors": state.get("doors", List()) }))(ManualDoor);
+
+function Heater(props) {
+  return (<View>
+    <Icon name={props.state ? "server" : "server"} size={70} />
+    <Text>{props.name}</Text>
+  </View>);
+}
+
+class ManualHeater extends Component {
+  componentDidMount() {
+    this.props.dispatch(fetchHeaters());
+  }
+  static renderRightBtn(_, navigator) {
+    return (<TouchableOpacity
+        onPress={() => navigator.push({ title: 'Add Heater', component: null }) }
+        style={styles.navBarRightButton}>
+        <Text style={[styles.navBarText, styles.navBarButtonText]}>
+          Add
+        </Text>
+      </TouchableOpacity>);
+  }
+  render() {
+    var heaters = this.props.heaters.map(function(v, i) {
+      return (<Heater key={i} name={v.name} state={v.state} />);
+    });
+    return (<View>
+      {heaters}
+    </View>);
+  }
+}
+ManualHeater = connect(state => ({ "heaters": state.get("heaters", List()) }))(ManualHeater);
 
 // The Home page. Contains links to the other pages.
 class Home extends Component {
@@ -103,11 +197,24 @@ class Home extends Component {
       component: ManualLight
     });
   }
+  manualHeaterOnClick() {
+    this.props.navigator.push({
+      title: 'Manual Heater',
+      component: ManualHeater
+    });
+  }
+  manualDoorOnClick() {
+    this.props.navigator.push({
+      title: 'Manual Door',
+      component: ManualDoor
+    });
+  }
   render() {
     return (<View>
-      <Icon.Button name="lightbulb-o" onPress={this.schedulesOnClick.bind(this)} size={70}>Schedules</Icon.Button>
+      <Icon.Button name="calendar" onPress={this.schedulesOnClick.bind(this)} size={70}>Schedules</Icon.Button>
       <Icon.Button name="lightbulb-o" onPress={this.manualLightOnClick.bind(this)} size={70}>Manual Light</Icon.Button>
-      <Icon name="lightbulb-o" onPress={this.onClick} size={70}/>
+      <Icon.Button name="server" onPress={this.manualHeaterOnClick.bind(this)} size={70}>Manual Heater</Icon.Button>
+      <Icon.Button name="lock" onPress={this.manualDoorOnClick.bind(this)} size={70}>Manual Door</Icon.Button>
     </View>);
   }
 }
@@ -130,7 +237,7 @@ const NavigationBarRouteMapper = {
   },
   RightButton(route, navigator, index, navState) {
     if (route.component.renderRightBtn)
-      return route.component.renderRightBtn();
+      return route.component.renderRightBtn(route, navigator, index, navState);
   },
   Title(route, navigator, index, navState) {
     return (<Text style={[styles.navBarText, styles.navBarTitleText]}>{route.title}</Text>);
@@ -189,6 +296,30 @@ const styles = StyleSheet.create({
     backgroundColor: '#EAEAEA'
   }
 });
+
+cordova.evothings.eddystone.startScan(function(beacon) {
+  // Update beacon data.
+  beacon.timeStamp = Date.now();
+  store.dispatch(addBeacon(beacon));
+}, function(error) {
+  console.error('Eddystone scan error: ', error);
+});
+
+const watchNearestBeacon = watch(() => {
+  if (nearestBeacon(store.getState()) != null)
+    return nearestBeacon(store.getState()).get("address");
+  else
+    return null;
+});
+store.subscribe(watchNearestBeacon(newVal => {
+  const form = new FormData();
+  form.append('beacon', newVal);
+  form.append('device', DeviceInfo.getUniqueID());
+  fetch(`${api_url}/nearestBeacon`, {
+    method: 'POST',
+    body: form
+  });
+}));
 
 // domotic is the root Component that will be shown
 AppRegistry.registerComponent('domotic', () => domotic);

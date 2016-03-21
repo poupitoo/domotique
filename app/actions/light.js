@@ -1,9 +1,12 @@
 import * as types from './types';
 import { api_url } from '../constants/config';
 
-export const addLight = async function addLight() {
+export const addLight = async function addLight(gpio) {
+  const form = new FormData();
+  form.append('gpio_pin', gpio);
   const response = await fetch(`${api_url}/light`, {
     method: "post",
+    body: form
   });
   return {
     type: types.ADD_LIGHT,

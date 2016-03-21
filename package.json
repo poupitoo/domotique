@@ -9,11 +9,17 @@
     "immutable": "^3.7.6",
     "react-native": "^0.20.0",
     "react-native-button": "^1.4.2",
+    "react-native-cordova-plugin": "github:roblabla/react-native-cordova-plugin",
+    "react-native-device-info": "^0.8.4",
     "react-native-vector-icons": "^1.2.0",
     "react-redux": "^4.4.0",
     "redux": "^3.3.1",
     "redux-immutablejs": "0.0.8",
     "redux-logger": "^2.5.2",
-    "redux-promise": "^0.5.1"
+    "redux-promise": "^0.5.1",
+    "redux-watch": "^1.1.0"
+  },
+  "devDependencies": {
+    "react-native-cli": "^0.1.10"
   }
 }

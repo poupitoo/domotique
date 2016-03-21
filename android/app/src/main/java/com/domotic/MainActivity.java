@@ -4,6 +4,8 @@ import com.facebook.react.ReactActivity;
 import com.oblador.vectoricons.VectorIconsPackage;
 import com.facebook.react.ReactPackage;
 import com.facebook.react.shell.MainReactPackage;
+import io.cordova.reactnative.CordovaPluginPackage;
+import com.learnium.RNDeviceInfo.RNDeviceInfo;
 
 import java.util.Arrays;
 import java.util.List;
@@ -36,7 +38,9 @@ public class MainActivity extends ReactActivity {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
         new MainReactPackage(),
-        new VectorIconsPackage()
+        new VectorIconsPackage(),
+        new CordovaPluginPackage(this),
+        new RNDeviceInfo()
       );
     }
 }
