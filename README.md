@@ -3,6 +3,28 @@
 Une application de domotique simple, permettant depuis un smartphone de
 controller des lampes, un chauffage et des portes.
 
+## Installation
+
+### Server
+
+```
+git clone https://github.com/poupitoo/domotique
+cd domotique/server
+pip install -r requirements.txt
+cd src
+python index.py
+```
+
+### Client
+
+```
+git clone https://github.com/poupitoo/domotique
+cd domotique
+npm i
+node_modules/.bin/cordova-plugin install https://github.com/evothings/cordova-eddystone
+node node_modules/react-native-cli/index.js run-android
+```
+
 ## Fonctionnement
 
 Les appareils sont branché sur une RaspberryPI via les ports GPIO. L'utilisateur
