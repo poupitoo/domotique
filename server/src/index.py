@@ -94,7 +94,11 @@ def door_post(id):
 
 @app.route("/nearestBeacon", methods=['POST'])
 def nearestBeacon():
-    pass
+    lights = Light.query.filter(Light.beacon_id == request.form['beacon']).all()
+    for light in lights:
+        light.state = True
+        db.session.commit()
+        subprocess.call(["gpio", "write", str(light.gpio_pin), "1"])
 
 if __name__ == '__main__':
     handler = logging.StreamHandler(sys.stderr)
