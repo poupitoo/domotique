@@ -157,10 +157,31 @@ class ManualDoor extends Component {
 }
 ManualDoor = connect(state => ({ "doors": state.get("doors", List()) }))(ManualDoor);
 
+class AddHeater extends Component {
+  static renderRightBtn(_, navigator) {
+    return (<TouchableOpacity
+        onPress={() => store.dispatch(addHeater(store.getState().get("addForm").get("gpio_pin"))) && navigator.pop()}
+        style={styles.navBarRightButton}>
+        <Text style={[styles.navBarText, styles.navBarButtonText]}>
+          Done
+        </Text>
+      </TouchableOpacity>);
+  }
+  render() {
+    return (<View>
+        <TextInput
+          onChangeText={(text) => this.props.dispatch(setField("gpio_pin", text))}
+          value={this.props.addForm.get("gpio_pin")}
+        />
+      </View>);
+  }
+}
+AddHeater = connect(state => ({ "addForm": state.get("addForm", Map()) }))(AddHeater);
+
 function Heater(props) {
-  return (<View>
-    <Icon name={props.state ? "server" : "server"} size={70} />
-    <Text>{props.name}</Text>
+  return (<View style={{flexDirection: "row"}}>
+    <Icon name={"server"} color={props.state ? "red" : "blue"} size={70} />
+    <Text style={{alignSelf: "center", marginLeft: 60}}>GPIO {props.gpioPin}</Text>
   </View>);
 }
 
@@ -170,7 +191,7 @@ class ManualHeater extends Component {
   }
   static renderRightBtn(_, navigator) {
     return (<TouchableOpacity
-        onPress={() => navigator.push({ title: 'Add Heater', component: null }) }
+        onPress={() => navigator.push({ title: 'Add Heater', component: AddHeater }) }
         style={styles.navBarRightButton}>
         <Text style={[styles.navBarText, styles.navBarButtonText]}>
           Add
@@ -178,12 +199,16 @@ class ManualHeater extends Component {
       </TouchableOpacity>);
   }
   render() {
-    var heaters = this.props.heaters.map(function(v, i) {
-      return (<Heater key={i} name={v.name} state={v.state} />);
+    var heaters = this.props.heaters.valueSeq().map((v) => {
+      return (<TouchableOpacity
+                key={v.get("id")}
+                onPress={() => this.props.dispatch(toggleHeater(v.get("id"), !v.get("state")))}>
+        <Heater gpioPin={v.get("gpio_pin")} state={v.get("state")} />
+      </TouchableOpacity>);
     });
-    return (<View>
+    return (<ScrollView>
       {heaters}
-    </View>);
+    </ScrollView>);
   }
 }
 ManualHeater = connect(state => ({ "heaters": state.get("heaters", List()) }))(ManualHeater);
@@ -241,7 +266,7 @@ const NavigationBarRouteMapper = {
     );
   },
   RightButton(route, navigator, index, navState) {
-    if (route.component.renderRightBtn)
+    if (route.component && route.component.renderRightBtn)
       return route.component.renderRightBtn(route, navigator, index, navState);
   },
   Title(route, navigator, index, navState) {

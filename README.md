@@ -38,6 +38,18 @@ les appareils a des heures donnees
 3. Il peut forcer l'allumage d'un appareil simplement en etant a proximitee de
 celui-ci. La proximitee est determinee via des Beacons.
 
+## API URL
+
+`GET /light`
+
+`POST /light`
+
+`GET /light/<id>`
+
+`POST /light/<id>`
+
+`GET /
+
 ## Dev Stack
 
 ### Frontend : React Native
@@ -66,3 +78,4 @@ systeme d'exploitation de lancer un script a une date et heure donnee.
 
 ![Screenshot1](img/Screenshot_20160321-203336.png)
 ![Screenshot2](img/Screenshot_20160321-203446.png)
+![Screenshot3](img/Screenshot_20160321-211429.png)
