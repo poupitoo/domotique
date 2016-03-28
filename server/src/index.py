@@ -7,7 +7,7 @@ import sys
 import subprocess
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://domotic@localhost/domotic'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/pi/db.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATION'] = False
 db.init_app(app)
 with app.app_context():
@@ -36,6 +36,8 @@ def light_update(id):
     try:
         if light.state:
             subprocess.call(["gpio", "write", str(light.gpio_pin), "1"])
+        else:
+            subprocess.call(["gpio", "write", str(light.gpio_pin), "0"])
     except:
         pass
     return flask.json.dumps(light, cls=AlchemyEncoder)
