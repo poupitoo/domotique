@@ -26,6 +26,7 @@ import { addBeacon } from './app/actions/beacons';
 import { addLight, fetchLights, toggleLight } from './app/actions/light';
 import { addHeater, fetchHeaters } from './app/actions/heater';
 import { addDoor, fetchDoors } from './app/actions/door';
+import { addSchedule, fetchSchedule } from './app/actions/schedules';
 import { setField } from './app/actions/addForm';
 import { api_url } from './app/constants/config';
 import nearestBeacon from './app/selectors/nearestBeacon';
@@ -51,23 +52,62 @@ class Schedule {
   }
 }
 
-// TODO: Convert state to redux
-class Schedules extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      "schedules": []
-    };
+class AddSchedule extends Component {
+  static renderRightBtn(_, navigator) {
+    return (<TouchableOpacity
+        onPress={() => store.dispatch(addSchedule(
+          store.getState().get("addForm").get("at"),
+          store.getState().get("addForm").get("to"),
+          store.getState().get("addForm").get("lights").split(","))) && navigator.pop()}
+        style={styles.navBarRightButton}>
+        <Text style={[styles.navBarText, styles.navBarButtonText]}>
+          Done
+        </Text>
+      </TouchableOpacity>);
   }
   render() {
-    var schedules = this.state.schedules.map(function(v) {
-      return (<Schedule name={v.name} at={v.at} to={v.to} />);
-    });
     return (<View>
-      {schedules}
-    </View>);
+        <TextInput
+          onChangeText={(text) => this.props.dispatch(setField("at", text))}
+          value={this.props.addForm.get("at")}
+        />
+        <TextInput
+          onChangeText={(text) => this.props.dispatch(setField("to", text))}
+          value={this.props.addForm.get("to")}
+        />
+        <TextInput
+          onChangeText={(text) => this.props.dispatch(setField("lights", text))}
+          value={this.props.addForm.get("lights")}
+        />
+      </View>);
   }
 }
+AddSchedule = connect(state => ({ "addForm": state.get("addForm", Map()) }))(AddSchedule);
+
+// TODO: Convert state to redux
+class Schedules extends Component {
+  static renderRightBtn(_, navigator) {
+    return (<TouchableOpacity
+        onPress={() => navigator.push({ title: 'Add Schedule', component: AddSchedule }) }
+        style={styles.navBarRightButton}>
+        <Text style={[styles.navBarText, styles.navBarButtonText]}>
+          Add
+        </Text>
+      </TouchableOpacity>);
+  }
+  componentDidMount() {
+    this.props.dispatch(fetchSchedule());
+  }
+  render() {
+    const schedules = this.props.schedules.map(function(v) {
+      return (<Schedule name={v.name} at={v.at} to={v.to} />);
+    });
+    return (<ScrollView>
+      {schedules}
+    </ScrollView>);
+  }
+}
+Schedules = connect(state => ({ "schedules": state.get("schedules", List()) }))(Schedules);
 
 function Light(props) {
   return (<View style={{flexDirection: "row"}}>

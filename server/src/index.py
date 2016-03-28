@@ -1,10 +1,13 @@
 from flask import Flask, request, Response
 import flask
 from flask_sqlalchemy import SQLAlchemy
-from models.common import db, Light, Heater, Door, AlchemyEncoder
+from models.common import db, Light, Heater, Door, Schedule, AlchemyEncoder
 import logging
 import sys
 import subprocess
+import time
+import traceback
+from crontab import CronTab
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://domotic@localhost/domotic'
@@ -99,6 +102,30 @@ def nearestBeacon():
         light.state = True
         db.session.commit()
         subprocess.call(["gpio", "write", str(light.gpio_pin), "1"])
+
+@app.route("/schedule", methods=['GET'])
+def getSchedules():
+    return flask.json.dumps(Schedule.query.all(), cls=AlchemyEncoder)
+
+@app.route("/schedule", methods=['POST'])
+def new_schedule():
+    try:
+        lights = [Light.query.filter(Light.id == id).one() for id in request.form['lights']]
+        at = time.strptime(request.form['at'], "%H:%M")
+        to = time.strptime(request.form['to'], "%H:%M")
+        schedule = Schedule(lights = lights, at = at, to = to)
+        db.session.add(schedule)
+        db.session.commit()
+        user_cron = CronTab(user = True)
+        start_job = user_cron.new(command='/usr/bin/python ' + os.path.join(os.path.dirname(os.path.realpath(__file__)), "cronscript.py") + " " + schedule.id + " start")
+        start_job.setall(at)
+        stop_job = user_cron.new(command='/usr/bin/python ' + os.path.join(os.path.dirname(os.path.realpath(__file__)), "cronscript.py") + " " + schedule.id + " start")
+        stop_job.setall(to)
+        user_cron.write_to_user(user = True)
+        return flask.json.dumps({ 'success': True })
+    except Exception as e:
+        traceback.print_tb(e.__traceback__)
+        raise e
 
 if __name__ == '__main__':
     handler = logging.StreamHandler(sys.stderr)
