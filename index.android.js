@@ -156,9 +156,15 @@ class AddLight extends Component {
   }
   render() {
     return (<View>
-        <TextInput
+        <Text>GPIO :</Text>
+	<TextInput
           onChangeText={(text) => this.props.dispatch(setField("gpio_pin", text))}
           value={this.props.addForm.get("gpio_pin")}
+        />
+	<Text>Beacon ID :</Text>
+	<TextInput
+          onChangeText={(text) => this.props.dispatch(setField("beacon_id", text))}
+          value={this.props.addForm.get("beacon_id")}
         />
       </View>);
   }
