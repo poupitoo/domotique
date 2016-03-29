@@ -3,7 +3,7 @@ import * as types from '../actions/types';
 
 const initialState = List()
 
-export default function lights(state = initialState, action = {}) {
+export default function schedules(state = initialState, action = {}) {
   switch (action.type) {
     case types.ADD_SCHEDULE:
       return state.push(fromJS(action.payload));

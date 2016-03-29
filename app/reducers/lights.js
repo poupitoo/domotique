@@ -8,7 +8,6 @@ export default function lights(state = initialState, action = {}) {
     case types.ADD_LIGHT:
       return state.set(action.payload.id, fromJS(action.payload));
     case types.FETCH_LIGHTS:
-      console.log(action.payload);
       return fromJS(action.payload).reduce(function(acc, v) {
         return acc.set(v.get("id"), v);
       }, Map());
