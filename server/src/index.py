@@ -104,6 +104,7 @@ def nearestBeacon():
         light.state = True
         db.session.commit()
         subprocess.call(["gpio", "write", str(light.gpio_pin), "1"])
+    return flask.json.dumps({ 'success': True })
 
 @app.route("/schedule", methods=['GET'])
 def getSchedules():
@@ -126,7 +127,7 @@ def new_schedule():
         user_cron.write_to_user(user = True)
         return flask.json.dumps({ 'success': True })
     except Exception as e:
-        traceback.print_tb(e.__traceback__)
+        traceback.print_exc()
         raise e
 
 if __name__ == '__main__':
