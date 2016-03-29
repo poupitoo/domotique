@@ -43,13 +43,12 @@ import DeviceInfo from 'react-native-device-info';
  * Each time the Redux store is updated, a new render will be called thanks to
  * the "connect" function.
  */
-class Schedule {
-  render() {
+function Schedule(props) {
     return (<View>
-      At : <Button>{this.props.at}</Button>
-      To : <Button>{this.props.to}</Button>
+      <Text>At : {props.at}</Text>
+      <Text>To : {props.to}</Text>
+      <Text>Lights: {props.lights}</Text>
     </View>);
-  }
 }
 
 class AddSchedule extends Component {
@@ -100,7 +99,7 @@ class Schedules extends Component {
   }
   render() {
     const schedules = this.props.schedules.map(function(v) {
-      return (<Schedule name={v.name} at={v.at} to={v.to} />);
+      return (<Schedule key={v.get("id")} name={v.get("name")} at={v.get("at")} to={v.get("to")} lights={v.get("lights")} />);
     });
     return (<ScrollView>
       {schedules}
@@ -112,6 +111,7 @@ Schedules = connect(state => ({ "schedules": state.get("schedules", List()) }))(
 function Light(props) {
   return (<View style={{flexDirection: "row"}}>
     <IonIcon name={props.state ? "ios-lightbulb" : "ios-lightbulb-outline"} size={70} />
+    <Text style={{alignSelf: "center", marginLeft: 60}}>ID {props.id}</Text>
     <Text style={{alignSelf: "center", marginLeft: 60}}>GPIO {props.gpioPin}</Text>
   </View>);
 }
@@ -134,7 +134,7 @@ class ManualLight extends Component {
       return (<TouchableOpacity
                 key={v.get("id")}
                 onPress={() => this.props.dispatch(toggleLight(v.get("id"), !v.get("state")))}>
-        <Light gpioPin={v.get("gpio_pin")} state={v.get("state")} />
+        <Light id={v.get("id")} gpioPin={v.get("gpio_pin")} state={v.get("state")} />
       </TouchableOpacity>);
     });
     return (<ScrollView>

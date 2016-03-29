@@ -17,5 +17,5 @@ const state = fromJS({});
 const store = createStore(
     reducer,
     state,
-    applyMiddleware(promiseMiddleware, createLogger({ stateTransformer: state => state.toJS() })));
+    applyMiddleware(promiseMiddleware));
 export default store;
