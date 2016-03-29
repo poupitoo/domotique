@@ -16,3 +16,4 @@ class AlchemyEncoder(json.JSONEncoder):
 from .light import Light
 from .door import Door
 from .heater import Heater
+from .schedule import Schedule

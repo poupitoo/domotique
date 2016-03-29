@@ -8,3 +8,5 @@ export const ADD_DOOR = 'ADD_DOOR';
 export const FETCH_DOORS = 'FETCH_DOORS';
 export const SET_FIELD = 'SET_FIELD';
 export const ADD_BEACON = 'ADD_BEACON';
+export const FETCH_SCHEDULE = 'FETCH_SCHEDULE';
+export const ADD_SCHEDULE = 'ADD_SCHEDULE';
