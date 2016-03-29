@@ -2,10 +2,11 @@ from flask import Flask, request, Response
 import flask
 from flask_sqlalchemy import SQLAlchemy
 from models.common import db, Light, Heater, Door, Schedule, AlchemyEncoder
+import os
 import logging
 import sys
 import subprocess
-import time
+from datetime import datetime
 import traceback
 from crontab import CronTab
 
@@ -99,6 +100,7 @@ def door_post(id):
 
 @app.route("/nearestBeacon", methods=['POST'])
 def nearestBeacon():
+    print(request.form['beacon'])
     lights = Light.query.filter(Light.beacon_id == request.form['beacon']).all()
     for light in lights:
         light.state = True
@@ -113,16 +115,17 @@ def getSchedules():
 @app.route("/schedule", methods=['POST'])
 def new_schedule():
     try:
-        lights = [Light.query.filter(Light.id == id).one() for id in request.form['lights']]
-        at = time.strptime(request.form['at'], "%H:%M")
-        to = time.strptime(request.form['to'], "%H:%M")
+        lights = [Light.query.filter(Light.id == id).one() for id in request.form.getlist('lights[]')]
+        at = datetime.strptime(request.form['at'], "%H:%M").time()
+        to = datetime.strptime(request.form['to'], "%H:%M").time()
         schedule = Schedule(lights = lights, at = at, to = to)
         db.session.add(schedule)
         db.session.commit()
+
         user_cron = CronTab(user = True)
-        start_job = user_cron.new(command='/usr/bin/python ' + os.path.join(os.path.dirname(os.path.realpath(__file__)), "cronscript.py") + " " + schedule.id + " start")
+        start_job = user_cron.new(command='/usr/bin/python ' + os.path.join(os.path.dirname(os.path.realpath(__file__)), "cronscript.py") + " " + str(schedule.id) + " start")
         start_job.setall(at)
-        stop_job = user_cron.new(command='/usr/bin/python ' + os.path.join(os.path.dirname(os.path.realpath(__file__)), "cronscript.py") + " " + schedule.id + " start")
+        stop_job = user_cron.new(command='/usr/bin/python ' + os.path.join(os.path.dirname(os.path.realpath(__file__)), "cronscript.py") + " " + str(schedule.id) + " stop")
         stop_job.setall(to)
         user_cron.write_to_user(user = True)
         return flask.json.dumps({ 'success': True })
